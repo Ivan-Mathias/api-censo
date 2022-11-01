@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id                Int                 @id @default(autoincrement())
+  googleId          String              @unique
+  nome              String
+  sobrenome         String?
+  email             String              @unique
+  role              Role                @default(USER)
+  AdministadorCenso AdministadorCenso[]
+  DataResposta      DataResposta[]
+  Rascunho          Rascunho[]
+  refreshToken      refreshToken[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model refreshToken {
+  id          Int           @id @default(autoincrement())
+  idUsuario   Int
+  token       String
+  expiracao   DateTime
+  criadoEm    DateTime      @default(now())
+  criadoPor   String
+  idSucessor  Int?          @unique
+  usuario     Usuario       @relation(fields: [idUsuario], references: [id])
+  sucessor    refreshToken? @relation("TokenHistory", fields: [idSucessor], references: [id])
+  predecessor refreshToken? @relation("TokenHistory")
+
+  @@index([idUsuario])
+}
+
+model Censo {
+  id                Int                 @id @default(autoincrement())
+  nome              String
+  visivel           Boolean
+  perguntas         Pergunta[]
+  DataResposta      DataResposta[]
+  AdministadorCenso AdministadorCenso[]
+  Rascunho          Rascunho[]
+}
+
+model Pergunta {
+  id           Int           @id @default(autoincrement())
+  texto        String
+  idCenso      Int
+  censo        Censo         @relation(fields: [idCenso], references: [id])
+  alternativas Alternativa[]
+}
+
+model Alternativa {
+  id         Int         @id @default(autoincrement())
+  texto      String
+  idPergunta Int
+  censo      Pergunta    @relation(fields: [idPergunta], references: [id])
+  resultados Resultado[]
+}
+
+model Resultado {
+  id            Int         @id @default(autoincrement())
+  resposta      String?
+  idAlternativa Int
+  censo         Alternativa @relation(fields: [idAlternativa], references: [id])
+}
+
+model DataResposta {
+  idUsuario Int
+  idCenso   Int
+  data      DateTime
+  usuario   Usuario  @relation(fields: [idUsuario], references: [id])
+  censo     Censo    @relation(fields: [idCenso], references: [id])
+
+  @@id([idUsuario, idCenso])
+}
+
+model AdministadorCenso {
+  idAdministrador Int
+  idCenso         Int
+  administrador   Usuario @relation(fields: [idAdministrador], references: [id])
+  censo           Censo   @relation(fields: [idCenso], references: [id])
+
+  @@id([idAdministrador, idCenso])
+}
+
+model Rascunho {
+  id        Int     @id @default(autoincrement())
+  respostas String
+  idCenso   Int
+  idUsuario Int
+  user      Usuario @relation(fields: [idUsuario], references: [id])
+  censo     Censo   @relation(fields: [idCenso], references: [id])
+}
