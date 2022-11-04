@@ -19,6 +19,6 @@ export default async function validateRequest(request: Request, _response: Respo
         }
         next();
     } catch (error) {
-        next ({ name: 'ValidationError', message: `Erro de validação: ${error}`})
+        next ({ name: 'ValidationError', message: `${error}`})
     }
 }
