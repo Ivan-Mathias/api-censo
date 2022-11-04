@@ -4,7 +4,7 @@ import './config/passport'
 import api from './api'
 import passport from 'passport'
 import session from 'express-session'
-// import errorHandler from './middleware/errorHandler'
+import errorHandler from './middleware/errorHandler'
 
 const app = express()
 app.use(express.json())
@@ -24,7 +24,7 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 app.use(api())
-// app.use(errorHandler)
+app.use(errorHandler)
 
 const port = process.env.port || 3333
 app.listen(port, () => {
