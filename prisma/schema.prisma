@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["interactiveTransactions"]
 }
 
 datasource db {
@@ -60,7 +61,7 @@ model Pergunta {
 
 model Alternativa {
   id         Int         @id @default(autoincrement())
-  texto      String
+  texto      String?
   idPergunta Int
   censo      Pergunta    @relation(fields: [idPergunta], references: [id])
   resultados Resultado[]
