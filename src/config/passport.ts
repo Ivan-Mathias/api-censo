@@ -25,11 +25,13 @@ passport.use(
       })
 
       if(!user) {
+        const displayName = profile.displayName.split(' ')
+
         const newUser = await prismaClient.usuario.create({
           data: {
             googleId: profile.id,
-            nome: profile.name?.givenName || profile.displayName.split(' ')[0],
-            sobrenome: profile.name?.familyName || profile.displayName.split(' ').length > 1 ? profile.displayName.split(' ').at(-1) : undefined,
+            nome: profile.name?.givenName || displayName[0],
+            sobrenome: profile.name?.familyName || displayName.length > 1 ? displayName[displayName.length - 1] : undefined,
             email: profile.emails?.[0].value || '',
           }
         })

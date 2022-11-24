@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["interactiveTransactions"]
 }
 
@@ -19,6 +19,7 @@ model Usuario {
   DataResposta      DataResposta[]
   Rascunho          Rascunho[]
   refreshToken      refreshToken[]
+  Submissao         Submissao[]
 }
 
 enum Role {
@@ -49,12 +50,14 @@ model Censo {
   DataResposta      DataResposta[]
   AdministadorCenso AdministadorCenso[]
   Rascunho          Rascunho[]
+  Submissao         Submissao[]
 }
 
 model Pergunta {
   id           Int           @id @default(autoincrement())
   texto        String
   idCenso      Int
+  tipo         TipoPergunta  @default(UNICA)
   censo        Censo         @relation(fields: [idCenso], references: [id])
   alternativas Alternativa[]
 }
@@ -71,6 +74,7 @@ model Resultado {
   id            Int         @id @default(autoincrement())
   resposta      String?
   idAlternativa Int
+  idSubmissao   String
   censo         Alternativa @relation(fields: [idAlternativa], references: [id])
 }
 
@@ -100,4 +104,20 @@ model Rascunho {
   idUsuario Int
   user      Usuario @relation(fields: [idUsuario], references: [id])
   censo     Censo   @relation(fields: [idCenso], references: [id])
+}
+
+model Submissao {
+  id        Int     @id @default(autoincrement())
+  idCenso   Int
+  idUsuario Int
+  censo     Censo   @relation(fields: [idCenso], references: [id])
+  usuario   Usuario @relation(fields: [idUsuario], references: [id])
+
+  @@unique([idCenso, idUsuario])
+}
+
+enum TipoPergunta {
+  UNICA
+  MULTIPLA
+  TEXTO
 }
