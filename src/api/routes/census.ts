@@ -12,6 +12,17 @@ const controller = new CensusController(service)
 export default (app: Router) => {
   app.use(route)
 
+  route.get(
+    '/censo',
+    (...args) => validateRequest(
+      ...args,
+      Yup.object().shape({
+        id: Yup.number().required()
+      })
+    ),
+    controller.getById.bind(controller)
+  )
+
   route.post(
     '/censo',
     (...args) => validateRequest(
@@ -32,5 +43,22 @@ export default (app: Router) => {
       })
     ),
     controller.create.bind(controller)
+  )
+
+  route.post(
+    '/censo/submeter',
+    (...args) => validateRequest(
+      ...args,
+      Yup.object().shape({
+        idCenso: Yup.number().required(),
+        resultado: Yup.array().required().of(
+          Yup.object().shape({
+            idAlternativa: Yup.number().required(),
+            resposta: Yup.string()
+          })
+        )
+      })
+    ),
+    controller.answer.bind(controller)
   )
 }
