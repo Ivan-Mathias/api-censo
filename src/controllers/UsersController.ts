@@ -1,25 +1,41 @@
-import { NextFunction, Request, Response } from "express";
-import bcrypt from 'bcrypt';
-import UsersService from "../services/UsersService";
+import { NextFunction, Request, Response } from "express"
+import UsersService from "../services/UsersService"
 
 export default class UsersController {
-  saltRounds: number;
-
   constructor(
     private usersService: UsersService
   ){
-    this.saltRounds = 10
   }
 
-  async create(request: Request, response: Response, next: NextFunction) {
-    const { nusp, email, senha } = request.body
+  async getAdminList(_request: Request, response: Response, next: NextFunction) {
+    try {
+      const adminList = await this.usersService.getAdminList()
+
+      response.json(adminList)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async createAdmin(request: Request, response: Response, next: NextFunction) {
+    const { email } = request.body
 
     try {
-      const senhaHash = bcrypt.hashSync(senha, this.saltRounds)
+      await this.usersService.createAdmin(email)
 
-      const userDetails = await this.usersService.createUser(nusp, email, senhaHash)
+      response.status(204).end()
+    } catch (error) {
+      next(error)
+    }
+  }
 
-      response.status(201).json(userDetails)
+  async removeAdminStatus(request: Request, response: Response, next: NextFunction) {
+    const { id } = request.params
+
+    try {
+      await this.usersService.removeAdminStatus(parseInt(id))
+
+      response.status(204).end()
     } catch (error) {
       next(error)
     }

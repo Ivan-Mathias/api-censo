@@ -1,28 +1,34 @@
 import { Router } from "express";
-import { PrismaClient } from '@prisma/client'
 import UsersService from "../../services/UsersService";
 import UsersController from "../../controllers/UsersController";
 import validateRequest from "../../middleware/validateRequest";
 import * as Yup from 'yup'
 
 const route = Router();
-const client = new PrismaClient()
-const service = new UsersService(client)
+const service = new UsersService()
 const controller = new UsersController(service)
 
 export default (app: Router) => {
   app.use(route)
 
+  route.get(
+    '/admins',
+    controller.getAdminList.bind(controller)
+  )
+
   route.post(
-    '/aluno',
+    '/admins',
     (...args) => validateRequest(
       ...args,
       Yup.object().shape({
-        nusp: Yup.number().required(),
-        email: Yup.string().required(),
-        senha: Yup.string().required()
+        email: Yup.string().required()
       })
     ),
-    controller.create.bind(controller)
+    controller.createAdmin.bind(controller)
+  )
+
+  route.delete(
+    '/admins/:id',
+    controller.removeAdminStatus.bind(controller)
   )
 }

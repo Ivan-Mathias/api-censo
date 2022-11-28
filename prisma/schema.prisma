@@ -10,8 +10,8 @@ datasource db {
 
 model Usuario {
   id                Int                 @id @default(autoincrement())
-  googleId          String              @unique
-  nome              String
+  googleId          String?              @unique
+  nome              String?
   sobrenome         String?
   email             String              @unique
   role              Role                @default(USER)
