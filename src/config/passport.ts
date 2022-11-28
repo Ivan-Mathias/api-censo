@@ -32,7 +32,7 @@ passport.use(
             googleId: profile.id,
             nome: profile.name?.givenName || displayName[0],
             sobrenome: profile.name?.familyName || displayName.length > 1 ? displayName[displayName.length - 1] : undefined,
-            email: profile.emails?.[0].value || '',
+            email: profile.emails?.[0].value || ''
           }
         })
 
