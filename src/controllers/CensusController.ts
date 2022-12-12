@@ -17,28 +17,59 @@ export default class CensusController {
 
       response.json(result)
     } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  }
+
+  async getStats(request: Request, response: Response, next: NextFunction) {
+    const user = request.user!
+
+    try {
+      const censusCount = await this.censusService.getStats(user.id)
+
+      response.json(censusCount)
+    } catch (error) {
       next(error)
     }
   }
 
   async getById(request: Request, response: Response, next: NextFunction) {
-    const id = parseInt(request.query.id as string)
+    const id = parseInt(request.params.idCenso)
 
     try {
       const result = await this.censusService.getCensusById(id)
 
       response.json(result)
     } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  }
+
+  async getTcleById(request: Request, response: Response, next: NextFunction) {
+    const id = parseInt(request.params.idCenso)
+
+    try {
+      const result = await this.censusService.getCensusTcleById(id)
+
+      response.json(result)
+    } catch (error) {
+      console.log(error)
       next(error)
     }
   }
 
   async answer(request: Request, response: Response, next: NextFunction) {
     const dto = request.body as AnswerCensusDTO
+    const { idCenso } = request.params
     const user = request.user
 
+    console.log(idCenso)
+
     try {
-      const result = await this.censusService.answerCensus(user?.id!, dto)
+      const result = await this.censusService.answerCensus(
+        user?.id!, parseInt(idCenso), dto)
 
       response.json(result)
     } catch (error) {

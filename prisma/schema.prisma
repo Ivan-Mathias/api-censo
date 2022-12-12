@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["interactiveTransactions"]
+  previewFeatures = ["filteredRelationCount"]
 }
 
 datasource db {
@@ -10,7 +10,7 @@ datasource db {
 
 model Usuario {
   id                Int                 @id @default(autoincrement())
-  googleId          String?              @unique
+  googleId          String?             @unique
   nome              String?
   sobrenome         String?
   email             String              @unique
@@ -44,48 +44,52 @@ model refreshToken {
 
 model Censo {
   id                Int                 @id @default(autoincrement())
-  nome              String
-  visivel           Boolean
-  perguntas         Pergunta[]
+  title             String
+  description       String?
+  date              DateTime            @updatedAt
+  visivel           Boolean             @default(false)
+  questions         Pergunta[]
   DataResposta      DataResposta[]
   AdministadorCenso AdministadorCenso[]
   Rascunho          Rascunho[]
   Submissao         Submissao[]
+  TCLE              tcle[]
 }
 
 model Pergunta {
-  id           Int           @id @default(autoincrement())
-  texto        String
-  idCenso      Int
-  tipo         TipoPergunta  @default(UNICA)
-  censo        Censo         @relation(fields: [idCenso], references: [id])
-  alternativas Alternativa[]
+  id        Int           @id @default(autoincrement())
+  text      String
+  idCenso   Int
+  mandatory Boolean       @default(true)
+  type      TipoPergunta  @default(UNICA)
+  censo     Censo         @relation(fields: [idCenso], references: [id])
+  options   Alternativa[]
 }
 
 model Alternativa {
   id         Int         @id @default(autoincrement())
-  texto      String?
-  idPergunta Int
-  censo      Pergunta    @relation(fields: [idPergunta], references: [id])
-  resultados Resultado[]
+  text       String
+  questionId Int
+  censo      Pergunta    @relation(fields: [questionId], references: [id])
+  answer     Resultado[]
 }
 
 model Resultado {
-  id            Int         @id @default(autoincrement())
-  resposta      String?
-  idAlternativa Int
-  idSubmissao   String
-  censo         Alternativa @relation(fields: [idAlternativa], references: [id])
+  id           Int         @id @default(autoincrement())
+  resposta     String?
+  optionId     Int
+  submissionId String
+  censo        Alternativa @relation(fields: [optionId], references: [id])
 }
 
 model DataResposta {
-  idUsuario Int
-  idCenso   Int
-  data      DateTime
-  usuario   Usuario  @relation(fields: [idUsuario], references: [id])
-  censo     Censo    @relation(fields: [idCenso], references: [id])
+  idUser  Int
+  idCenso Int
+  date    DateTime
+  user    Usuario  @relation(fields: [idUser], references: [id])
+  censo   Censo    @relation(fields: [idCenso], references: [id])
 
-  @@id([idUsuario, idCenso])
+  @@id([idUser, idCenso])
 }
 
 model AdministadorCenso {
@@ -114,6 +118,13 @@ model Submissao {
   usuario   Usuario @relation(fields: [idUsuario], references: [id])
 
   @@unique([idCenso, idUsuario])
+}
+
+model tcle {
+  id      Int    @id @default(autoincrement())
+  text    String
+  idCenso Int
+  censo   Censo  @relation(fields: [idCenso], references: [id])
 }
 
 enum TipoPergunta {
