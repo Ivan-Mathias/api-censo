@@ -1,5 +1,7 @@
+import { Usuario } from "@prisma/client";
 import { Router } from "express";
 import passport from "passport";
+import authorize from "../../middleware/authorize";
 
 const route = Router();
 
@@ -12,18 +14,26 @@ export default (app: Router) => {
             scope: ['email', 'profile']
         })
     )
+
     route.get(
         '/oauth2/redirect/google',
         passport.authenticate('google'),
-        (req, res) => {
-            res.redirect('/user-info')
+        (_req, res) => {
+            res.redirect('/oauth2/success')
+        }
+    )
+
+    route.get(
+        '/oauth2/success',
+        (_req, res) => {
+            res.send('<script>window.close()</script > ')
         }
     )
 
     route.get(
         '/user-info',
         (req, res) => {
-            if(!req.user) res.redirect('/google')
+            if(!req.user) res.status(401).end()
             res.json(req.user)
         }
     )

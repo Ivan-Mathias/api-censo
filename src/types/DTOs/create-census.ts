@@ -1,10 +1,11 @@
 interface CreateCensusDTO {
-  name: string
+  title: string
+  description?: string
   visible?: boolean
   questions: {
     text: string
     options: {
-      text?: string
+      text: string
     }[]
   }[]
 }
