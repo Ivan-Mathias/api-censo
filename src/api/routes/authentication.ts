@@ -38,15 +38,13 @@ export default (app: Router) => {
         }
     )
 
-    route.get(
+    route.post(
         '/logout',
         (req, res, next) => {
-            req.logOut((err) => {
+            req.session.destroy(err => {
                 if (err) { return next(err) }
-                console.log('logout started')
-                res.redirect('/google')
+                res.end()
             })
-
         }
     )
 }
