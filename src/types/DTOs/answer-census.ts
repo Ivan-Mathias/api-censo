@@ -1,8 +1,4 @@
-interface AnswerCensusDTO {
-  resultado: AlternativasEnviadas[]
-}
-
-type AlternativasEnviadas = {
+type AlternativaEnviada = {
   optionId: number
   resposta?: string
 }
@@ -13,4 +9,4 @@ export type AlternativasSubmissao = {
   submissionId: string
 }
 
-export default AnswerCensusDTO
+export default AlternativaEnviada

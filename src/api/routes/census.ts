@@ -56,14 +56,12 @@ export default (app: Router) => {
     '/censo/:idCenso',
     (...args) => validateRequest(
       ...args,
-      Yup.object().shape({
-        resultado: Yup.array().required().of(
-          Yup.object().shape({
-            idAlternativa: Yup.number().required(),
-            resposta: Yup.string()
-          })
-        )
-      })
+      Yup.array().of(
+        Yup.object().shape({
+          optionId: Yup.number().required(),
+          resposta: Yup.string()
+        })
+      )
     ),
     controller.answer.bind(controller)
   )
