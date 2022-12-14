@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import prismaClient from "../config/prisma";
+import AlternativaEnviada from '../types/DTOs/answer-census';
 import AnswerCensusDTO, { AlternativasSubmissao } from "../types/DTOs/answer-census";
 import StatusCensusDTO from '../types/DTOs/census-status';
 import CreateCensusDTO from "../types/DTOs/create-census";
@@ -108,10 +109,8 @@ export default class CensusService {
   async answerCensus(
     idUsuario: number,
     idCenso: number,
-    { resultado: alternativasEnviadas }: AnswerCensusDTO
+    alternativasEnviadas: AlternativaEnviada[]
   ) {
-    console.log("entrando no servico com censo", idCenso, 'e usuario', idUsuario);
-
     const jaSubmeteu = await prismaClient.submissao.findUnique({
       where: { idCenso_idUsuario: { idCenso, idUsuario } }
     })
