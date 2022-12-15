@@ -13,9 +13,9 @@ export default (app: Router) => {
   app.use(route)
 
   route.get(
-    '/stats',
+    '/censos',
     (...args) => authorize(...args),
-    controller.getStats.bind(controller)
+    controller.getCensusList.bind(controller)
   )
 
   route.get(
@@ -35,7 +35,7 @@ export default (app: Router) => {
       Yup.object().shape({
         title: Yup.string().required(),
         description: Yup.string(),
-        visible: Yup.bool(),
+        publish: Yup.bool(),
         questions: Yup.array().of(
             Yup.object().shape({
                 text: Yup.string().required(),

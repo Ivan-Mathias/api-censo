@@ -46,8 +46,9 @@ model Censo {
   id                Int                 @id @default(autoincrement())
   title             String
   description       String?
-  date              DateTime            @updatedAt
-  visivel           Boolean             @default(false)
+  lastUpdated       DateTime            @updatedAt
+  datePublished     DateTime?
+  dateClosed        DateTime?
   questions         Pergunta[]
   DataResposta      DataResposta[]
   AdministadorCenso AdministadorCenso[]

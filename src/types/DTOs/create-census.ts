@@ -3,7 +3,7 @@ import { TipoPergunta } from '@prisma/client';
 interface CreateCensusDTO {
   title: string
   description?: string
-  visible?: boolean
+  publish?: boolean
   questions: {
     text: string,
     type: TipoPergunta,

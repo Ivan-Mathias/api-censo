@@ -18,7 +18,7 @@ export default class CensusService {
       data: {
         title: dto.title,
         description: dto.description,
-        visivel: dto.visible ?? false,
+        datePublished: dto.publish ? new Date() : null,
         questions: {
           create: dto.questions.map(question => ({
             text: question.text,
@@ -44,42 +44,69 @@ export default class CensusService {
     })
   }
 
-  async getStats(id: number) {
+  async getCensusList(id: number) {
     const user = await prismaClient.usuario.findUnique({
-      where: { id }
+      where: {id},
     })
 
-    if(user?.role === 'USER') {
+    if (user?.role === 'USER') {
       const census = await prismaClient.censo.findMany({
-        where: { visivel: true },
+        where: {
+          OR: [
+            {
+              datePublished: {not: null},
+              dateClosed: {equals: null},
+            },
+            {
+              dateClosed: {not: null},
+              DataResposta: {
+                some: {
+                  AND: {
+                    date: {not: undefined},
+                    idUser: id
+                  }
+                }
+              }
+            }
+          ]
+        },
         include: {
+          DataResposta: {
+            select: {
+              date: true
+            },
+            where: {
+              idUser: id
+            }
+          },
           _count: {
             select: {
-              Submissao: {
-                where: {
-                  idUsuario: id
-                }
-              },
               questions: true
             }
           }
         }
       })
 
+      console.log(census);
+
       let dto: StatusCensusDTO[] = []
 
       census.forEach(item => {
+        console.log(item.DataResposta[0])
         dto.push({
-          ...item,
-          description: item.description || undefined,
-          questions: item._count.questions,
-          submitted: item._count.Submissao !== 0
-
+          id: item.id,
+          title: item.title,
+          datePublished: item.datePublished || undefined,
+          dateClosed: item.dateClosed || undefined,
+          dateAnswered: item.DataResposta[0]?.date || undefined,
+          lastUpdated: item.lastUpdated,
+          questions: item._count.questions
         })
       });
 
       return dto
     }
+
   }
 
   async getCensusById(id: number) {

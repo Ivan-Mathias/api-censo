@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import CensusService from "../services/CensusService";
 import AlternativaEnviada from "../types/DTOs/answer-census";
-import AnswerCensusDTO from "../types/DTOs/answer-census";
 import CreateCensusDTO from "../types/DTOs/create-census";
 
 export default class CensusController {
@@ -23,13 +22,13 @@ export default class CensusController {
     }
   }
 
-  async getStats(request: Request, response: Response, next: NextFunction) {
+  async getCensusList(request: Request, response: Response, next: NextFunction) {
     const user = request.user!
 
     try {
-      const censusCount = await this.censusService.getStats(user.id)
+      const censusList = await this.censusService.getCensusList(user.id)
 
-      response.json(censusCount)
+      response.json(censusList)
     } catch (error) {
       next(error)
     }
