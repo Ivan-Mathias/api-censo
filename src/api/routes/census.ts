@@ -28,6 +28,11 @@ export default (app: Router) => {
     controller.getTcleById.bind(controller)
   )
 
+  route.get(
+    '/censo/:idCenso/resultados',
+    controller.getResultsById.bind(controller)
+  )
+
   route.post(
     '/censo',
     (...args) => validateRequest(

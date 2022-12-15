@@ -60,6 +60,20 @@ export default class CensusController {
     }
   }
 
+  async getResultsById(request: Request, response: Response, next: NextFunction) {
+    const id = parseInt(request.params.idCenso)
+    const user = request.user
+
+      try {
+        const result = await this.censusService.getResultsById(user?.id!, id)
+
+        response.json(result)
+      } catch (error) {
+        console.log(error)
+        next(error)
+      }
+  }
+
   async answer(request: Request, response: Response, next: NextFunction) {
     const dto = request.body as AlternativaEnviada[]
     const { idCenso } = request.params

@@ -3,6 +3,7 @@ import prismaClient from "../config/prisma";
 import AlternativaEnviada, {AlternativasSubmissao} from '../types/DTOs/answer-census';
 import StatusCensusDTO from '../types/DTOs/census-status';
 import CreateCensusDTO from "../types/DTOs/create-census";
+import ResultsCensusDTO from "../types/DTOs/census-results";
 import ConflictionError from "../types/errors/ConflictionError";
 import NotFoundError from '../types/errors/NotFoundError';
 import ValidationError from "../types/errors/ValidationError";
@@ -116,7 +117,6 @@ export default class CensusService {
           }
         }
       })
-      console.log(census)
       let dto: StatusCensusDTO[] = []
 
       census.forEach(item => {
@@ -156,6 +156,64 @@ export default class CensusService {
     if (tcle === null) throw new NotFoundError(`Tcle from census with id ${idCenso} not found`)
 
     return tcle.text
+  }
+
+  async getResultsById(idUsuario: number, idCenso: number) {
+    const user = await prismaClient.usuario.findUnique({
+      where: {id: idUsuario},
+    })
+
+    if (user?.role !== 'ADMIN') throw new ForbiddenError('Usuário não é administrador')
+
+    const censo = await prismaClient.censo.findUnique({
+      where: {id: idCenso},
+      include: {
+        questions: {
+          include: {
+            options: {
+              include: {
+                _count: {
+                  select: {
+                    answer: true
+                  }
+                },
+                answer: true
+              }
+            }
+          }
+        }
+      }
+    })
+
+    if (censo === null) throw new NotFoundError(`Censo with id ${idCenso} not found`)
+
+    let dto: ResultsCensusDTO = {
+      id: censo.id,
+      title: censo.title,
+      description: censo.description || undefined,
+      questions: censo.questions.map(question => ({
+        id: question.id,
+        text: question.text,
+        type: question.type,
+        answers: (() => {
+          let submissions = new Set();
+          question.options.forEach(option => {
+            option.answer.forEach(answer => {
+              submissions.add(answer.submissionId)
+            })
+          })
+          return submissions.size
+        })(),
+        mandatory: question.mandatory,
+        options: question.options.map(option => ({
+          id: option.id,
+          text: option.text,
+          _count: {answer: option._count.answer},
+        }))
+      }))
+    }
+
+    return dto
   }
 
   async answerCensus(
