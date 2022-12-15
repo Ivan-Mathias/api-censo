@@ -107,6 +107,34 @@ export default class CensusService {
       return dto
     }
 
+    if (user?.role === 'ADMIN') {
+      const census = await prismaClient.censo.findMany({
+        include: {
+          _count: {
+            select: {
+              questions: true,
+              DataResposta: true
+            }
+          }
+        }
+      })
+      console.log(census)
+      let dto: StatusCensusDTO[] = []
+
+      census.forEach(item => {
+        dto.push({
+          id: item.id,
+          title: item.title,
+          datePublished: item.datePublished || undefined,
+          dateClosed: item.dateClosed || undefined,
+          lastUpdated: item.lastUpdated,
+          questions: item._count.questions,
+          answers: item._count.DataResposta
+        })
+      });
+
+      return dto
+    }
   }
 
   async getCensusById(id: number) {
