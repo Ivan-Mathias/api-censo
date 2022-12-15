@@ -1,7 +1,6 @@
 import crypto from 'crypto'
 import prismaClient from "../config/prisma";
-import AlternativaEnviada from '../types/DTOs/answer-census';
-import AnswerCensusDTO, { AlternativasSubmissao } from "../types/DTOs/answer-census";
+import AlternativaEnviada, {AlternativasSubmissao} from '../types/DTOs/answer-census';
 import StatusCensusDTO from '../types/DTOs/census-status';
 import CreateCensusDTO from "../types/DTOs/create-census";
 import ConflictionError from "../types/errors/ConflictionError";
@@ -23,6 +22,8 @@ export default class CensusService {
         questions: {
           create: dto.questions.map(question => ({
             text: question.text,
+            type: question.type,
+            mandatory: question.mandatory,
             options: {
               createMany: {
                 data: question.options.map(option => ({
@@ -82,8 +83,8 @@ export default class CensusService {
   }
 
   async getCensusById(id: number) {
-    const censo = await prismaClient.censo.findUnique({
-      where: { id },
+    return await prismaClient.censo.findUnique({
+      where: {id},
       include: {
         questions: {
           include: {
@@ -92,8 +93,6 @@ export default class CensusService {
         }
       }
     })
-
-    return censo
   }
 
   async getCensusTcleById(idCenso: number) {

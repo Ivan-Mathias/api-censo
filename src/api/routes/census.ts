@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { PrismaClient, Role } from '@prisma/client'
 import CensusService from "../../services/CensusService";
 import CensusController from "../../controllers/CensusController";
 import validateRequest from "../../middleware/validateRequest";
@@ -40,6 +39,8 @@ export default (app: Router) => {
         questions: Yup.array().of(
             Yup.object().shape({
                 text: Yup.string().required(),
+                type: Yup.string().required(),
+                mandatory: Yup.bool(),
                 options: Yup.array().of(
                     Yup.object().shape({
                         text: Yup.string()
