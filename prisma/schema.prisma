@@ -17,9 +17,7 @@ model Usuario {
   role              Role                @default(USER)
   AdministadorCenso AdministadorCenso[]
   DataResposta      DataResposta[]
-  Rascunho          Rascunho[]
   refreshToken      refreshToken[]
-  Submissao         Submissao[]
 }
 
 enum Role {
@@ -52,8 +50,6 @@ model Censo {
   questions         Pergunta[]
   DataResposta      DataResposta[]
   AdministadorCenso AdministadorCenso[]
-  Rascunho          Rascunho[]
-  Submissao         Submissao[]
   TCLE              tcle[]
 }
 
@@ -102,25 +98,6 @@ model AdministadorCenso {
   @@id([idAdministrador, idCenso])
 }
 
-model Rascunho {
-  id        Int     @id @default(autoincrement())
-  respostas String
-  idCenso   Int
-  idUsuario Int
-  user      Usuario @relation(fields: [idUsuario], references: [id])
-  censo     Censo   @relation(fields: [idCenso], references: [id])
-}
-
-model Submissao {
-  id        Int     @id @default(autoincrement())
-  idCenso   Int
-  idUsuario Int
-  censo     Censo   @relation(fields: [idCenso], references: [id])
-  usuario   Usuario @relation(fields: [idUsuario], references: [id])
-
-  @@unique([idCenso, idUsuario])
-}
-
 model tcle {
   id      Int    @id @default(autoincrement())
   text    String
@@ -131,5 +108,4 @@ model tcle {
 enum TipoPergunta {
   UNICA
   MULTIPLA
-  TEXTO
 }

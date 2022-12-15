@@ -60,7 +60,6 @@ export default (app: Router) => {
       Yup.array().of(
         Yup.object().shape({
           optionId: Yup.number().required(),
-          resposta: Yup.string()
         })
       )
     ),

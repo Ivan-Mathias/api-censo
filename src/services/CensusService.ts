@@ -137,8 +137,8 @@ export default class CensusService {
     idCenso: number,
     alternativasEnviadas: AlternativaEnviada[]
   ) {
-    const jaSubmeteu = await prismaClient.submissao.findUnique({
-      where: { idCenso_idUsuario: { idCenso, idUsuario } }
+    const jaSubmeteu = await prismaClient.dataResposta.findUnique({
+      where: { idUser_idCenso: { idUser: idUsuario, idCenso } }
     })
 
     if (jaSubmeteu) throw new ConflictionError('O usuário já respondeu esse censo')
@@ -164,13 +164,10 @@ export default class CensusService {
       if (pergunta.type === 'UNICA' && filtro.length !== 1)
         throw new ValidationError('Pergunta foi enviada duas vezes')
 
-      if (pergunta.type === 'TEXTO' && (filtro.length !== 1 || filtro[0].resposta === undefined))
-        throw new ValidationError('Pergunta com campo de texto enviada em branco')
-
       alternativas.push.apply(alternativas, filtro.map(alt => ({ ...alt, submissionId })))
     });
 
     await prismaClient.resultado.createMany({ data: alternativas })
-    await prismaClient.submissao.create({ data: { idCenso, idUsuario } })
+    await prismaClient.dataResposta.create({ data: { idCenso, idUser: idUsuario, date: new Date() } })
   }
 }
