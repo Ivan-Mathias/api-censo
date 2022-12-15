@@ -44,13 +44,13 @@ model Censo {
   id                Int                 @id @default(autoincrement())
   title             String
   description       String?
+  tcle              String?
   lastUpdated       DateTime            @updatedAt
   datePublished     DateTime?
   dateClosed        DateTime?
   questions         Pergunta[]
   DataResposta      DataResposta[]
   AdministadorCenso AdministadorCenso[]
-  TCLE              tcle[]
 }
 
 model Pergunta {
@@ -96,13 +96,6 @@ model AdministadorCenso {
   censo           Censo   @relation(fields: [idCenso], references: [id])
 
   @@id([idAdministrador, idCenso])
-}
-
-model tcle {
-  id      Int    @id @default(autoincrement())
-  text    String
-  idCenso Int
-  censo   Censo  @relation(fields: [idCenso], references: [id])
 }
 
 enum TipoPergunta {

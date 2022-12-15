@@ -21,6 +21,7 @@ export default class CensusService {
         title: dto.title,
         description: dto.description,
         datePublished: dto.publish ? new Date() : null,
+        tcle: dto.tcle,
         questions: {
           create: dto.questions.map(question => ({
             text: question.text,
@@ -41,7 +42,7 @@ export default class CensusService {
           include: {
             options: true
           }
-        }
+        },
       }
     })
   }
@@ -70,6 +71,7 @@ export default class CensusService {
       data: {
         title: dto.title,
         description: dto.description,
+        tcle: dto.tcle,
         datePublished: dto.publish ? new Date() : null,
         questions: {
           create: dto.questions.map(question => ({
@@ -199,13 +201,13 @@ export default class CensusService {
   }
 
   async getCensusTcleById(idCenso: number) {
-    const tcle = await prismaClient.tcle.findFirst({
-      where: { idCenso }
+    const censo = await prismaClient.censo.findFirst({
+      where: { id: idCenso }
     })
 
-    if (tcle === null) throw new NotFoundError(`Tcle from census with id ${idCenso} not found`)
+    if (censo === null || !censo.tcle) throw new NotFoundError(`Tcle from census with id ${idCenso} not found`)
 
-    return tcle.text
+    return censo.tcle
   }
 
   async getResultsById(idUsuario: number, idCenso: number) {

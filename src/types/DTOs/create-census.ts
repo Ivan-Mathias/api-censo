@@ -4,6 +4,7 @@ interface CreateCensusDTO {
   id?: number
   title: string
   description?: string
+  tcle?: string
   publish?: boolean
   questions: {
     id?: number

@@ -40,6 +40,7 @@ export default (app: Router) => {
       Yup.object().shape({
         title: Yup.string().required(),
         description: Yup.string(),
+        tcle: Yup.string(),
         publish: Yup.bool(),
         questions: Yup.array().of(
             Yup.object().shape({
@@ -90,6 +91,7 @@ export default (app: Router) => {
         id: Yup.number().required(),
         title: Yup.string().required(),
         description: Yup.string(),
+        tcle: Yup.string(),
         publish: Yup.bool(),
         questions: Yup.array().of(
           Yup.object().shape({
