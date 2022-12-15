@@ -17,9 +17,7 @@ model Usuario {
   role              Role                @default(USER)
   AdministadorCenso AdministadorCenso[]
   DataResposta      DataResposta[]
-  Rascunho          Rascunho[]
   refreshToken      refreshToken[]
-  Submissao         Submissao[]
 }
 
 enum Role {
@@ -46,14 +44,13 @@ model Censo {
   id                Int                 @id @default(autoincrement())
   title             String
   description       String?
-  date              DateTime            @updatedAt
-  visivel           Boolean             @default(false)
+  tcle              String?
+  lastUpdated       DateTime            @updatedAt
+  datePublished     DateTime?
+  dateClosed        DateTime?
   questions         Pergunta[]
   DataResposta      DataResposta[]
   AdministadorCenso AdministadorCenso[]
-  Rascunho          Rascunho[]
-  Submissao         Submissao[]
-  TCLE              tcle[]
 }
 
 model Pergunta {
@@ -62,7 +59,7 @@ model Pergunta {
   idCenso   Int
   mandatory Boolean       @default(true)
   type      TipoPergunta  @default(UNICA)
-  censo     Censo         @relation(fields: [idCenso], references: [id])
+  censo     Censo         @relation(fields: [idCenso], references: [id], onDelete: Cascade)
   options   Alternativa[]
 }
 
@@ -70,7 +67,7 @@ model Alternativa {
   id         Int         @id @default(autoincrement())
   text       String
   questionId Int
-  censo      Pergunta    @relation(fields: [questionId], references: [id])
+  censo      Pergunta    @relation(fields: [questionId], references: [id], onDelete: Cascade)
   answer     Resultado[]
 }
 
@@ -79,7 +76,7 @@ model Resultado {
   resposta     String?
   optionId     Int
   submissionId String
-  censo        Alternativa @relation(fields: [optionId], references: [id])
+  censo        Alternativa @relation(fields: [optionId], references: [id], onDelete: Cascade)
 }
 
 model DataResposta {
@@ -101,34 +98,7 @@ model AdministadorCenso {
   @@id([idAdministrador, idCenso])
 }
 
-model Rascunho {
-  id        Int     @id @default(autoincrement())
-  respostas String
-  idCenso   Int
-  idUsuario Int
-  user      Usuario @relation(fields: [idUsuario], references: [id])
-  censo     Censo   @relation(fields: [idCenso], references: [id])
-}
-
-model Submissao {
-  id        Int     @id @default(autoincrement())
-  idCenso   Int
-  idUsuario Int
-  censo     Censo   @relation(fields: [idCenso], references: [id])
-  usuario   Usuario @relation(fields: [idUsuario], references: [id])
-
-  @@unique([idCenso, idUsuario])
-}
-
-model tcle {
-  id      Int    @id @default(autoincrement())
-  text    String
-  idCenso Int
-  censo   Censo  @relation(fields: [idCenso], references: [id])
-}
-
 enum TipoPergunta {
   UNICA
   MULTIPLA
-  TEXTO
 }

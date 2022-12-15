@@ -1,12 +1,13 @@
 import crypto from 'crypto'
 import prismaClient from "../config/prisma";
-import AlternativaEnviada from '../types/DTOs/answer-census';
-import AnswerCensusDTO, { AlternativasSubmissao } from "../types/DTOs/answer-census";
+import AlternativaEnviada, {AlternativasSubmissao} from '../types/DTOs/answer-census';
 import StatusCensusDTO from '../types/DTOs/census-status';
 import CreateCensusDTO from "../types/DTOs/create-census";
+import ResultsCensusDTO from "../types/DTOs/census-results";
 import ConflictionError from "../types/errors/ConflictionError";
 import NotFoundError from '../types/errors/NotFoundError';
 import ValidationError from "../types/errors/ValidationError";
+import ForbiddenError from "../types/errors/ForbiddenError";
 
 export default class CensusService {
   constructor() {
@@ -19,10 +20,64 @@ export default class CensusService {
       data: {
         title: dto.title,
         description: dto.description,
-        visivel: dto.visible ?? false,
+        datePublished: dto.publish ? new Date() : null,
+        tcle: dto.tcle,
         questions: {
           create: dto.questions.map(question => ({
             text: question.text,
+            type: question.type,
+            mandatory: question.mandatory,
+            options: {
+              createMany: {
+                data: question.options.map(option => ({
+                  text: option.text
+                }))
+              }
+            }
+          }))
+        }
+      },
+      include: {
+        questions: {
+          include: {
+            options: true
+          }
+        },
+      }
+    })
+  }
+
+  async updateCensus(id: number, dto: CreateCensusDTO) {
+
+    console.log('atualizando...', dto)
+
+    const deleteAlternatives = prismaClient.alternativa.deleteMany({
+      where: {
+        censo: {
+          idCenso: id
+        }
+      }
+    })
+
+    const deleteQuestions = prismaClient.pergunta.deleteMany({
+      where: {
+        idCenso: id
+      }
+    })
+    await prismaClient.$transaction([deleteQuestions, deleteAlternatives]);
+
+    await prismaClient.censo.update({
+      where: {id},
+      data: {
+        title: dto.title,
+        description: dto.description,
+        tcle: dto.tcle,
+        datePublished: dto.publish ? new Date() : null,
+        questions: {
+          create: dto.questions.map(question => ({
+            text: question.text,
+            type: question.type,
+            mandatory: question.mandatory,
             options: {
               createMany: {
                 data: question.options.map(option => ({
@@ -43,22 +98,43 @@ export default class CensusService {
     })
   }
 
-  async getStats(id: number) {
+  async getCensusList(id: number) {
     const user = await prismaClient.usuario.findUnique({
-      where: { id }
+      where: {id},
     })
 
-    if(user?.role === 'USER') {
+    if (user?.role === 'USER') {
       const census = await prismaClient.censo.findMany({
-        where: { visivel: true },
+        where: {
+          OR: [
+            {
+              datePublished: {not: null},
+              dateClosed: {equals: null},
+            },
+            {
+              dateClosed: {not: null},
+              DataResposta: {
+                some: {
+                  AND: {
+                    date: {not: undefined},
+                    idUser: id
+                  }
+                }
+              }
+            }
+          ]
+        },
         include: {
+          DataResposta: {
+            select: {
+              date: true
+            },
+            where: {
+              idUser: id
+            }
+          },
           _count: {
             select: {
-              Submissao: {
-                where: {
-                  idUsuario: id
-                }
-              },
               questions: true
             }
           }
@@ -69,11 +145,41 @@ export default class CensusService {
 
       census.forEach(item => {
         dto.push({
-          ...item,
-          description: item.description || undefined,
-          questions: item._count.questions,
-          submitted: item._count.Submissao !== 0
+          id: item.id,
+          title: item.title,
+          datePublished: item.datePublished || undefined,
+          dateClosed: item.dateClosed || undefined,
+          dateAnswered: item.DataResposta[0]?.date || undefined,
+          lastUpdated: item.lastUpdated,
+          questions: item._count.questions
+        })
+      });
 
+      return dto
+    }
+
+    if (user?.role === 'ADMIN') {
+      const census = await prismaClient.censo.findMany({
+        include: {
+          _count: {
+            select: {
+              questions: true,
+              DataResposta: true
+            }
+          }
+        }
+      })
+      let dto: StatusCensusDTO[] = []
+
+      census.forEach(item => {
+        dto.push({
+          id: item.id,
+          title: item.title,
+          datePublished: item.datePublished || undefined,
+          dateClosed: item.dateClosed || undefined,
+          lastUpdated: item.lastUpdated,
+          questions: item._count.questions,
+          answers: item._count.DataResposta
         })
       });
 
@@ -82,8 +188,8 @@ export default class CensusService {
   }
 
   async getCensusById(id: number) {
-    const censo = await prismaClient.censo.findUnique({
-      where: { id },
+    return await prismaClient.censo.findUnique({
+      where: {id},
       include: {
         questions: {
           include: {
@@ -92,18 +198,74 @@ export default class CensusService {
         }
       }
     })
-
-    return censo
   }
 
   async getCensusTcleById(idCenso: number) {
-    const tcle = await prismaClient.tcle.findFirst({
-      where: { idCenso }
+    const censo = await prismaClient.censo.findFirst({
+      where: { id: idCenso }
     })
 
-    if (tcle === null) throw new NotFoundError(`Tcle from census with id ${idCenso} not found`)
+    if (censo === null || !censo.tcle) throw new NotFoundError(`Tcle from census with id ${idCenso} not found`)
 
-    return tcle.text
+    return censo.tcle
+  }
+
+  async getResultsById(idUsuario: number, idCenso: number) {
+    const user = await prismaClient.usuario.findUnique({
+      where: {id: idUsuario},
+    })
+
+    if (user?.role !== 'ADMIN') throw new ForbiddenError('Usuário não é administrador')
+
+    const censo = await prismaClient.censo.findUnique({
+      where: {id: idCenso},
+      include: {
+        questions: {
+          include: {
+            options: {
+              include: {
+                _count: {
+                  select: {
+                    answer: true
+                  }
+                },
+                answer: true
+              }
+            }
+          }
+        }
+      }
+    })
+
+    if (censo === null) throw new NotFoundError(`Censo with id ${idCenso} not found`)
+
+    let dto: ResultsCensusDTO = {
+      id: censo.id,
+      title: censo.title,
+      description: censo.description || undefined,
+      questions: censo.questions.map(question => ({
+        id: question.id,
+        text: question.text,
+        type: question.type,
+        answers: (() => {
+          let submissions = new Set();
+          question.options.forEach(option => {
+            option.answer.forEach(answer => {
+              submissions.add(answer.submissionId)
+            })
+          })
+          return submissions.size
+        })(),
+        mandatory: question.mandatory,
+        options: question.options.map(option => ({
+          id: option.id,
+          text: option.text,
+          _count: {answer: option._count.answer},
+        }))
+      }))
+    }
+
+    return dto
   }
 
   async answerCensus(
@@ -111,8 +273,8 @@ export default class CensusService {
     idCenso: number,
     alternativasEnviadas: AlternativaEnviada[]
   ) {
-    const jaSubmeteu = await prismaClient.submissao.findUnique({
-      where: { idCenso_idUsuario: { idCenso, idUsuario } }
+    const jaSubmeteu = await prismaClient.dataResposta.findUnique({
+      where: { idUser_idCenso: { idUser: idUsuario, idCenso } }
     })
 
     if (jaSubmeteu) throw new ConflictionError('O usuário já respondeu esse censo')
@@ -138,13 +300,34 @@ export default class CensusService {
       if (pergunta.type === 'UNICA' && filtro.length !== 1)
         throw new ValidationError('Pergunta foi enviada duas vezes')
 
-      if (pergunta.type === 'TEXTO' && (filtro.length !== 1 || filtro[0].resposta === undefined))
-        throw new ValidationError('Pergunta com campo de texto enviada em branco')
-
       alternativas.push.apply(alternativas, filtro.map(alt => ({ ...alt, submissionId })))
     });
 
     await prismaClient.resultado.createMany({ data: alternativas })
-    await prismaClient.submissao.create({ data: { idCenso, idUsuario } })
+    await prismaClient.dataResposta.create({ data: { idCenso, idUser: idUsuario, date: new Date() } })
+  }
+
+  async closeCensus(idUser: number, idCenso: number) {
+    const user = await prismaClient.usuario.findUnique({
+      where: {id: idUser},
+    })
+
+    if (user?.role !== 'ADMIN') throw new ForbiddenError('Usuário não é administrador')
+
+    const censo = await prismaClient.censo.findUnique({
+      where: { id: idCenso },
+    })
+
+    if (censo === null) throw new NotFoundError(`Censo with id ${idCenso} not found`)
+    if (censo.dateClosed !== null) throw new ConflictionError(`Censo with id ${idCenso} is already closed`)
+
+    return await prismaClient.censo.update({
+      where: {
+        id: idCenso
+      },
+      data: {
+        dateClosed: new Date()
+      }
+    })
   }
 }

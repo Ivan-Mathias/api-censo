@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import CensusService from "../services/CensusService";
 import AlternativaEnviada from "../types/DTOs/answer-census";
-import AnswerCensusDTO from "../types/DTOs/answer-census";
 import CreateCensusDTO from "../types/DTOs/create-census";
 
 export default class CensusController {
@@ -23,13 +22,26 @@ export default class CensusController {
     }
   }
 
-  async getStats(request: Request, response: Response, next: NextFunction) {
+  async update(request: Request, response: Response, next: NextFunction) {
+    const dto = request.body as CreateCensusDTO
+    const id = parseInt(request.params.idCenso)
+
+    try {
+      await this.censusService.updateCensus(id, dto)
+      response.status(204).end()
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  }
+
+  async getCensusList(request: Request, response: Response, next: NextFunction) {
     const user = request.user!
 
     try {
-      const censusCount = await this.censusService.getStats(user.id)
+      const censusList = await this.censusService.getCensusList(user.id)
 
-      response.json(censusCount)
+      response.json(censusList)
     } catch (error) {
       next(error)
     }
@@ -61,6 +73,20 @@ export default class CensusController {
     }
   }
 
+  async getResultsById(request: Request, response: Response, next: NextFunction) {
+    const id = parseInt(request.params.idCenso)
+    const user = request.user
+
+      try {
+        const result = await this.censusService.getResultsById(user?.id!, id)
+
+        response.json(result)
+      } catch (error) {
+        console.log(error)
+        next(error)
+      }
+  }
+
   async answer(request: Request, response: Response, next: NextFunction) {
     const dto = request.body as AlternativaEnviada[]
     const { idCenso } = request.params
@@ -71,6 +97,19 @@ export default class CensusController {
         user?.id!, parseInt(idCenso), dto)
 
       response.status(201).end()
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  }
+
+  async close(request: Request, response: Response, next: NextFunction) {
+    const id = parseInt(request.params.idCenso)
+    const user = request.user
+
+    try {
+      await this.censusService.closeCensus(user?.id!, id)
+      response.status(204).end()
     } catch (error) {
       console.log(error)
       next(error)

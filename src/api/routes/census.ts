@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { PrismaClient, Role } from '@prisma/client'
 import CensusService from "../../services/CensusService";
 import CensusController from "../../controllers/CensusController";
 import validateRequest from "../../middleware/validateRequest";
@@ -14,9 +13,9 @@ export default (app: Router) => {
   app.use(route)
 
   route.get(
-    '/stats',
+    '/censos',
     (...args) => authorize(...args),
-    controller.getStats.bind(controller)
+    controller.getCensusList.bind(controller)
   )
 
   route.get(
@@ -29,6 +28,11 @@ export default (app: Router) => {
     controller.getTcleById.bind(controller)
   )
 
+  route.get(
+    '/censo/:idCenso/resultados',
+    controller.getResultsById.bind(controller)
+  )
+
   route.post(
     '/censo',
     (...args) => validateRequest(
@@ -36,10 +40,13 @@ export default (app: Router) => {
       Yup.object().shape({
         title: Yup.string().required(),
         description: Yup.string(),
-        visible: Yup.bool(),
+        tcle: Yup.string(),
+        publish: Yup.bool(),
         questions: Yup.array().of(
             Yup.object().shape({
                 text: Yup.string().required(),
+                type: Yup.string().required(),
+                mandatory: Yup.bool(),
                 options: Yup.array().of(
                     Yup.object().shape({
                         text: Yup.string()
@@ -59,10 +66,49 @@ export default (app: Router) => {
       Yup.array().of(
         Yup.object().shape({
           optionId: Yup.number().required(),
-          resposta: Yup.string()
         })
       )
     ),
     controller.answer.bind(controller)
+  )
+
+  route.patch(
+    '/censo/:idCenso',
+    (...args) => validateRequest(
+      ...args,
+      Yup.object().shape({
+        close: Yup.bool(),
+      })
+    ),
+    controller.close.bind(controller)
+  )
+
+  route.put(
+    '/censo/:idCenso',
+    (...args) => validateRequest(
+      ...args,
+      Yup.object().shape({
+        id: Yup.number().required(),
+        title: Yup.string().required(),
+        description: Yup.string(),
+        tcle: Yup.string(),
+        publish: Yup.bool(),
+        questions: Yup.array().of(
+          Yup.object().shape({
+            id: Yup.number(),
+            text: Yup.string().required(),
+            type: Yup.string().required(),
+            mandatory: Yup.bool(),
+            options: Yup.array().of(
+              Yup.object().shape({
+                id: Yup.number(),
+                text: Yup.string()
+              })
+            )
+          })
+        ).required()
+      })
+    ),
+    controller.update.bind(controller)
   )
 }

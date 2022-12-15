@@ -1,9 +1,11 @@
 interface StatusCensusDTO {
   id: number
   title: string
-  description?: string
-  date: Date
-  submitted: boolean
+  datePublished?: Date
+  dateClosed?: Date
+  dateAnswered?: Date
+  lastUpdated?: Date
+  answers?: number
   questions: number
 }
 
