@@ -22,6 +22,19 @@ export default class CensusController {
     }
   }
 
+  async update(request: Request, response: Response, next: NextFunction) {
+    const dto = request.body as CreateCensusDTO
+    const id = parseInt(request.params.idCenso)
+
+    try {
+      await this.censusService.updateCensus(id, dto)
+      response.status(204).end()
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  }
+
   async getCensusList(request: Request, response: Response, next: NextFunction) {
     const user = request.user!
 

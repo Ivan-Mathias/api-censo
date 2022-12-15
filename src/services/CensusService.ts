@@ -46,6 +46,56 @@ export default class CensusService {
     })
   }
 
+  async updateCensus(id: number, dto: CreateCensusDTO) {
+
+    console.log('atualizando...', dto)
+
+    const deleteAlternatives = prismaClient.alternativa.deleteMany({
+      where: {
+        censo: {
+          idCenso: id
+        }
+      }
+    })
+
+    const deleteQuestions = prismaClient.pergunta.deleteMany({
+      where: {
+        idCenso: id
+      }
+    })
+    await prismaClient.$transaction([deleteQuestions, deleteAlternatives]);
+
+    await prismaClient.censo.update({
+      where: {id},
+      data: {
+        title: dto.title,
+        description: dto.description,
+        datePublished: dto.publish ? new Date() : null,
+        questions: {
+          create: dto.questions.map(question => ({
+            text: question.text,
+            type: question.type,
+            mandatory: question.mandatory,
+            options: {
+              createMany: {
+                data: question.options.map(option => ({
+                  text: option.text
+                }))
+              }
+            }
+          }))
+        }
+      },
+      include: {
+        questions: {
+          include: {
+            options: true
+          }
+        }
+      }
+    })
+  }
+
   async getCensusList(id: number) {
     const user = await prismaClient.usuario.findUnique({
       where: {id},

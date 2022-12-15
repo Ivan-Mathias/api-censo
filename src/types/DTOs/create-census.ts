@@ -1,14 +1,17 @@
 import { TipoPergunta } from '@prisma/client';
 
 interface CreateCensusDTO {
+  id?: number
   title: string
   description?: string
   publish?: boolean
   questions: {
-    text: string,
-    type: TipoPergunta,
-    mandatory: boolean,
+    id?: number
+    text: string
+    type: TipoPergunta
+    mandatory: boolean
     options: {
+      id?: number
       text: string
     }[]
   }[]

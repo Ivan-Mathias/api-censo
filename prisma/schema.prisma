@@ -59,7 +59,7 @@ model Pergunta {
   idCenso   Int
   mandatory Boolean       @default(true)
   type      TipoPergunta  @default(UNICA)
-  censo     Censo         @relation(fields: [idCenso], references: [id])
+  censo     Censo         @relation(fields: [idCenso], references: [id], onDelete: Cascade)
   options   Alternativa[]
 }
 
@@ -67,7 +67,7 @@ model Alternativa {
   id         Int         @id @default(autoincrement())
   text       String
   questionId Int
-  censo      Pergunta    @relation(fields: [questionId], references: [id])
+  censo      Pergunta    @relation(fields: [questionId], references: [id], onDelete: Cascade)
   answer     Resultado[]
 }
 
@@ -76,7 +76,7 @@ model Resultado {
   resposta     String?
   optionId     Int
   submissionId String
-  censo        Alternativa @relation(fields: [optionId], references: [id])
+  censo        Alternativa @relation(fields: [optionId], references: [id], onDelete: Cascade)
 }
 
 model DataResposta {

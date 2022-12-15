@@ -81,4 +81,32 @@ export default (app: Router) => {
     ),
     controller.close.bind(controller)
   )
+
+  route.put(
+    '/censo/:idCenso',
+    (...args) => validateRequest(
+      ...args,
+      Yup.object().shape({
+        id: Yup.number().required(),
+        title: Yup.string().required(),
+        description: Yup.string(),
+        publish: Yup.bool(),
+        questions: Yup.array().of(
+          Yup.object().shape({
+            id: Yup.number(),
+            text: Yup.string().required(),
+            type: Yup.string().required(),
+            mandatory: Yup.bool(),
+            options: Yup.array().of(
+              Yup.object().shape({
+                id: Yup.number(),
+                text: Yup.string()
+              })
+            )
+          })
+        ).required()
+      })
+    ),
+    controller.update.bind(controller)
+  )
 }
