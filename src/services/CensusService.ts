@@ -6,6 +6,7 @@ import CreateCensusDTO from "../types/DTOs/create-census";
 import ConflictionError from "../types/errors/ConflictionError";
 import NotFoundError from '../types/errors/NotFoundError';
 import ValidationError from "../types/errors/ValidationError";
+import ForbiddenError from "../types/errors/ForbiddenError";
 
 export default class CensusService {
   constructor() {
@@ -87,12 +88,9 @@ export default class CensusService {
         }
       })
 
-      console.log(census);
-
       let dto: StatusCensusDTO[] = []
 
       census.forEach(item => {
-        console.log(item.DataResposta[0])
         dto.push({
           id: item.id,
           title: item.title,
@@ -197,5 +195,29 @@ export default class CensusService {
 
     await prismaClient.resultado.createMany({ data: alternativas })
     await prismaClient.dataResposta.create({ data: { idCenso, idUser: idUsuario, date: new Date() } })
+  }
+
+  async closeCensus(idUser: number, idCenso: number) {
+    const user = await prismaClient.usuario.findUnique({
+      where: {id: idUser},
+    })
+
+    if (user?.role !== 'ADMIN') throw new ForbiddenError('Usuário não é administrador')
+
+    const censo = await prismaClient.censo.findUnique({
+      where: { id: idCenso },
+    })
+
+    if (censo === null) throw new NotFoundError(`Censo with id ${idCenso} not found`)
+    if (censo.dateClosed !== null) throw new ConflictionError(`Censo with id ${idCenso} is already closed`)
+
+    return await prismaClient.censo.update({
+      where: {
+        id: idCenso
+      },
+      data: {
+        dateClosed: new Date()
+      }
+    })
   }
 }

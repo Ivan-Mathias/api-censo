@@ -65,4 +65,15 @@ export default (app: Router) => {
     ),
     controller.answer.bind(controller)
   )
+
+  route.patch(
+    '/censo/:idCenso',
+    (...args) => validateRequest(
+      ...args,
+      Yup.object().shape({
+        close: Yup.bool(),
+      })
+    ),
+    controller.close.bind(controller)
+  )
 }

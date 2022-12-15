@@ -75,4 +75,17 @@ export default class CensusController {
       next(error)
     }
   }
+
+  async close(request: Request, response: Response, next: NextFunction) {
+    const id = parseInt(request.params.idCenso)
+    const user = request.user
+
+    try {
+      await this.censusService.closeCensus(user?.id!, id)
+      response.status(204).end()
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  }
 }
