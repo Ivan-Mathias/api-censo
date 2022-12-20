@@ -27,8 +27,16 @@ passport.use(
       if(!user) {
         const displayName = profile.displayName.split(' ')
 
-        const newUser = await prismaClient.usuario.create({
-          data: {
+        const newUser = await prismaClient.usuario.upsert({
+          where: {
+            email: profile.emails![0].value
+          },
+          update: {
+            googleId: profile.id,
+            nome: profile.name?.givenName || displayName[0],
+            sobrenome: profile.name?.familyName || displayName.length > 1 ? displayName[displayName.length - 1] : undefined,
+          },
+          create: {
             googleId: profile.id,
             nome: profile.name?.givenName || displayName[0],
             sobrenome: profile.name?.familyName || displayName.length > 1 ? displayName[displayName.length - 1] : undefined,
